@@ -1,0 +1,9 @@
+mutation DeletePushup($id: GadgetID!) {
+  deletePushup(id: $id) {
+    success
+    errors {
+      message
+      code
+    }
+  }
+}

@@ -1,0 +1,1964 @@
+schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+"The `JSONObject` scalar type represents JSON objects as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf)."
+scalar JSONObject
+"The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf)."
+scalar JSON
+"The ID of a record in Gadget"
+scalar GadgetID
+"A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar."
+scalar DateTime
+"Instructions for a client to turn raw transport types (like strings) into useful client side types (like Dates). Unstable and not intended for developer use."
+scalar HydrationPlan
+"Represents one session result record in internal api calls. Returns a JSON blob of all the record's fields."
+scalar InternalSessionRecord
+"Represents one user result record in internal api calls. Returns a JSON blob of all the record's fields."
+scalar InternalUserRecord
+"Represents one pushup result record in internal api calls. Returns a JSON blob of all the record's fields."
+scalar InternalPushupRecord
+"The `Upload` scalar type represents a file upload."
+scalar Upload
+"A field whose value conforms to the standard URL format as specified in RFC3986: https://www.ietf.org/rfc/rfc3986.txt."
+scalar URL
+"Represents the state of one record in a Gadget database. Represented as either a string or set of strings nested in objects."
+scalar RecordState
+"This Error object is returned for errors which don't have other specific handling. It has a message which is safe to display to users, but is often technical in nature. It also has a `code` field which is documented in the Gadget API Error Codes docs."
+type SimpleError implements ExecutionError {
+  "The human facing error message for this error."
+  message: String!
+  "The Gadget platform error code for this error."
+  code: String!
+  "The stack for any exception that caused the error"
+  stack: String
+}
+"This object is returned as an error when a record doesn't pass the defined validations on the model. The validation messages for each of the invalid fields are available via the other fields on this error type."
+type InvalidRecordError implements ExecutionError {
+  "The human facing error message for this error."
+  message: String!
+  "The Gadget platform error code for this InvalidRecordError."
+  code: String!
+  "The stack for any exception that caused the error"
+  stack: String
+  "An object mapping field apiIdentifiers to arrays of validation error message strings for that field, as a JSON object. The object may have keys that don't correspond exactly to field apiIdentifiers if added by validations, and the object may have missing keys if no errors were encountered for that field."
+  validationErrorsByField: JSONObject
+  "A list of InvalidFieldError objects describing each of the errors encountered on the invalid record."
+  validationErrors: [InvalidFieldError!]
+  "The record which failed validation, if available. Returns all the owned fields of the record -- no sub-selections are required or possible. Only available for super users."
+  record: JSONObject
+  "The model of the record which failed validation"
+  model: GadgetModel
+}
+"This Error object represents one individual failed validation for a record field. It has a message which is appropriate for display to a user, and lists the apiIdentifier of the field in question. The `apiIdentifier` for the field is not guaranteed to exist on the model."
+type InvalidFieldError {
+  "The human facing error message for this error."
+  message: String!
+  "The apiIdentifier of the field this error occurred on."
+  apiIdentifier: String!
+}
+type GadgetModel {
+  key: String!
+  name: String!
+  apiIdentifier: String!
+  namespace: [String!]
+  filterable: Boolean!
+  sortable: Boolean!
+  searchable: Boolean!
+  defaultDisplayField: GadgetModelField!
+  fields: [GadgetModelField!]!
+  actions: [GadgetAction!]!
+  action(apiIdentifier: String!): GadgetAction
+  views: [GadgetComputedView!]!
+  view(apiIdentifier: String!): GadgetComputedView
+  hasViews: Boolean!
+  pluralName: String!
+  pluralApiIdentifier: String!
+  currentSingletonApiIdentifier: String
+  defaultRecord: JSON!
+  graphQLTypeName: String!
+  graphQLTypeSDL: String!
+  typescriptTypeInterfaceName: String!
+  typescriptTypeInterface: String!
+  sortGraphQLTypeName: String
+  sortGraphQLTypeSDL: String
+  filterGraphQLTypeName: String
+  filterGraphQLTypeSDL: String
+  initialCreatedState: String
+  exampleSimpleFindOneQuery: String!
+  exampleSimpleFindManyQuery: String!
+  exampleFindMostRecentlyCreatedQuery: String!
+  exampleSearchQuery: String!
+  exampleFilterQuery: String!
+  examplePaginationQuery: String!
+  exampleFullFindOneQuery: String!
+  exampleFullFindFirstQuery: String!
+  exampleFullFindManyQuery: String!
+  exampleInternalFindOneQuery: String!
+  exampleInternalFindManyQuery: String!
+  exampleInternalFindFirstQuery: String!
+  exampleInternalCreateMutation: String!
+  exampleInternalBulkCreateMutation: String!
+  exampleInternalUpdateMutation: String!
+  exampleInternalUpsertMutation: String!
+  exampleInternalDeleteMutation: String!
+  exampleInternalDeleteManyMutation: String!
+}
+"One field of a Gadget model"
+type GadgetModelField implements GadgetField {
+  name: String!
+  apiIdentifier: String!
+  fieldType: GadgetFieldType!
+  hasDefault: Boolean!
+  required: Boolean!
+  requiredArgumentForInput: Boolean!
+  configuration: GadgetFieldConfigInterface!
+  isUniqueField: Boolean!
+  sortable: Boolean!
+  filterable: Boolean!
+  examples: GadgetModelFieldExamples!
+}
+type GadgetModelFieldExamples {
+  linkExistingChild: GadgetFieldUsageExample
+  linkNewChild: GadgetFieldUsageExample
+  linkToExistingParent: GadgetFieldUsageExample
+  createNestedInParent: GadgetFieldUsageExample
+}
+type GadgetFieldUsageExample {
+  exampleGraphQLMutation: String!
+  exampleGraphQLVariables: JSON!
+  exampleImperativeInvocation: String!
+  exampleReactHook: String!
+}
+type GadgetAction {
+  name: String!
+  apiIdentifier: String!
+  namespace: [String!]!
+  requiresInput: Boolean!
+  acceptsInput: Boolean!
+  hasDeleteRecordEffect: Boolean! @deprecated(reason: "This field will be removed. Use `isDeleteAction` instead.")
+  hasCreateOrUpdateEffect: Boolean! @deprecated(reason: "This field will be removed. Use `isCreateOrUpdateAction` instead.")
+  isDeleteAction: Boolean!
+  isCreateOrUpdateAction: Boolean!
+  isUpsertMetaAction: Boolean!
+  operatesWithRecordIdentity: Boolean!
+  possibleTransitions: JSONObject! @deprecated(reason: "This field will be removed.")
+  availableInBulk: Boolean!
+  bulkApiIdentifier: String
+  hasAmbiguousIdentifier: Boolean!
+  inputFields: [GadgetObjectField!]!
+  bulkInvokedByIDOnly: Boolean!
+  triggers: [GadgetTrigger!]
+  examples: GadgetActionGraphQLType
+}
+"One field of an action input or other transitory object in Gadget"
+type GadgetObjectField implements GadgetField {
+  name: String!
+  apiIdentifier: String!
+  fieldType: GadgetFieldType!
+  hasDefault: Boolean!
+  required: Boolean!
+  requiredArgumentForInput: Boolean!
+  configuration: GadgetFieldConfigInterface!
+}
+type GadgetTrigger {
+  specID: String!
+}
+type GadgetActionGraphQLType {
+  exampleMutation: String! @deprecated(reason: "moved to exampleGraphQLMutation")
+  exampleGraphQLMutation: String!
+  inputGraphQLTypeSDL: String
+  outputGraphQLTypeSDL: String!
+  inputTypeScriptInterface: String
+  outputTypeScriptInterface: String!
+  exampleGraphQLVariables: JSON!
+  exampleJSInputs: JSON!
+  exampleImperativeInvocation: String!
+  exampleReactHook: String!
+  exampleBulkMutation: String @deprecated(reason: "moved to exampleBulkGraphQLMutation")
+  exampleBulkGraphQLMutation: String
+  exampleBulkGraphQLVariables: JSON
+  exampleBulkImperativeInvocation: String
+  exampleBulkReactHook: String
+  bulkOutputGraphQLTypeSDL: String
+}
+type GadgetComputedView {
+  name: String!
+  apiIdentifier: String!
+  namespace: [String!]
+  namespacedApiIdentifier: String!
+  examples: GadgetComputedViewExamples
+}
+type GadgetComputedViewExamples {
+  acceptsInput: Boolean!
+  inputTypescriptType: String
+  outputTypescriptType: String!
+  inputGraphQLTypeSDL: String
+  exampleJSInputs: JSON!
+  exampleImperativeInvocation: String
+  referencedModelKeys: [String!]
+  allowedRoles: [String!]
+  exampleReactHook: String!
+}
+type GadgetGenericFieldConfig implements GadgetFieldConfigInterface {
+  fieldType: GadgetFieldType!
+  validations: [GadgetFieldValidationUnion]!
+}
+type GadgetObjectFieldConfig implements GadgetFieldConfigInterface {
+  fieldType: GadgetFieldType!
+  validations: [GadgetFieldValidationUnion]!
+  name: String
+  fields: [GadgetModelField!]!
+}
+type GadgetBelongsToConfig implements GadgetFieldConfigInterface {
+  fieldType: GadgetFieldType!
+  validations: [GadgetFieldValidationUnion]!
+  relatedModelKey: String
+  relatedModel: GadgetModel
+  isConfigured: Boolean!
+  isInverseConfigured: Boolean!
+}
+type GadgetHasOneConfig implements GadgetFieldConfigInterface {
+  fieldType: GadgetFieldType!
+  validations: [GadgetFieldValidationUnion]!
+  relatedModelKey: String
+  relatedModel: GadgetModel
+  inverseField: GadgetModelField
+  isConfigured: Boolean!
+  isInverseConfigured: Boolean!
+}
+type GadgetHasManyConfig implements GadgetFieldConfigInterface {
+  fieldType: GadgetFieldType!
+  validations: [GadgetFieldValidationUnion]!
+  relatedModelKey: String
+  relatedModel: GadgetModel
+  inverseField: GadgetModelField
+  isConfigured: Boolean!
+  isInverseConfigured: Boolean!
+  isJoinModelHasManyField: Boolean!
+}
+type GadgetHasManyThroughConfig implements GadgetFieldConfigInterface {
+  fieldType: GadgetFieldType!
+  validations: [GadgetFieldValidationUnion]!
+  relatedModelKey: String
+  relatedModel: GadgetModel
+  inverseField: GadgetModelField
+  joinModelKey: String
+  joinModel: GadgetModel
+  inverseJoinModelField: GadgetModelField
+  inverseRelatedModelField: GadgetModelField
+  isConfigured: Boolean!
+  isInverseConfigured: Boolean!
+  joinModelHasManyFieldApiIdentifier: String
+}
+type GadgetEnumConfig implements GadgetFieldConfigInterface {
+  fieldType: GadgetFieldType!
+  validations: [GadgetFieldValidationUnion]!
+  allowMultiple: Boolean!
+  allowOther: Boolean!
+  options: [GadgetEnumOption!]!
+}
+type GadgetEnumOption {
+  name: String!
+  color: String!
+}
+type GadgetDateTimeConfig implements GadgetFieldConfigInterface {
+  fieldType: GadgetFieldType!
+  validations: [GadgetFieldValidationUnion]!
+  includeTime: Boolean!
+}
+type GadgetNumberConfig implements GadgetFieldConfigInterface {
+  fieldType: GadgetFieldType!
+  validations: [GadgetFieldValidationUnion]!
+  decimals: Int
+}
+type GadgetRegexFieldValidation implements GadgetFieldValidationInterface {
+  name: String!
+  specID: String!
+  pattern: String
+}
+type GadgetRangeFieldValidation implements GadgetFieldValidationInterface {
+  name: String!
+  specID: String!
+  min: Int
+  max: Int
+}
+type GadgetOnlyImageFileFieldValidation implements GadgetFieldValidationInterface {
+  name: String!
+  specID: String!
+  allowAnimatedImages: Boolean!
+}
+type GadgetGenericFieldValidation implements GadgetFieldValidationInterface {
+  name: String!
+  specID: String!
+}
+type UpsertError implements UpsertUserResult & UpsertPushupResult {
+  success: Boolean!
+  errors: [ExecutionError!]
+  actionRun: String
+}
+type Query {
+  session(id: GadgetID!): Session
+  sessions(
+    "Returns the items in the list that come after the specified cursor."
+    after: String,
+    "Returns the first n items from the list."
+    first: Int,
+    "Returns the items in the list that come before the specified cursor."
+    before: String,
+    "Returns the last n items from the list."
+    last: Int,
+    "A list of filters to refine the results by"
+    filter: [SessionFilter!]
+  ): SessionConnection!
+  sessionGellyView(query: String!, variables: JSONObject): JSON
+  user(id: GadgetID!): User
+  users(
+    "Returns the items in the list that come after the specified cursor."
+    after: String,
+    "Returns the first n items from the list."
+    first: Int,
+    "Returns the items in the list that come before the specified cursor."
+    before: String,
+    "Returns the last n items from the list."
+    last: Int,
+    "A list of sort orders to return the results in"
+    sort: [UserSort!],
+    "A list of filters to refine the results by"
+    filter: [UserFilter!],
+    "A free form text search query to find records matching"
+    search: String,
+    "The configuration for which fields to search and the options for how to evaluate each field in the search. If not specified, all searchable fields will be searched."
+    searchFields: UserSearchFields
+  ): UserConnection!
+  userGellyView(query: String!, variables: JSONObject): JSON
+  pushup(id: GadgetID!): Pushup
+  pushups(
+    "Returns the items in the list that come after the specified cursor."
+    after: String,
+    "Returns the first n items from the list."
+    first: Int,
+    "Returns the items in the list that come before the specified cursor."
+    before: String,
+    "Returns the last n items from the list."
+    last: Int,
+    "A list of sort orders to return the results in"
+    sort: [PushupSort!],
+    "A list of filters to refine the results by"
+    filter: [PushupFilter!],
+    "A free form text search query to find records matching"
+    search: String,
+    "The configuration for which fields to search and the options for how to evaluate each field in the search. If not specified, all searchable fields will be searched."
+    searchFields: PushupSearchFields
+  ): PushupConnection!
+  pushupGellyView(query: String!, variables: JSONObject): JSON
+  gellyView(query: String!, variables: JSONObject): JSON
+  "Meta information about the application, like it's name, schema, and other internal details."
+  gadgetMeta: GadgetApplicationMeta!
+  currentSession: Session
+  internal: InternalQueries!
+}
+type Session {
+  "The globally unique, unchanging identifier for this record. Assigned and managed by Gadget."
+  id: GadgetID
+  "The time at which this record was first created. Set once upon record creation and never changed. Managed by Gadget."
+  createdAt: DateTime!
+  "The time at which this record was last changed. Set each time the record is successfully acted upon by an action. Managed by Gadget."
+  updatedAt: DateTime!
+  user: User
+  userId: GadgetID
+  "Get all the fields for this record. Useful for not having to list out all the fields you want to retrieve, but slower."
+  _all: JSONObject!
+}
+type User {
+  "The globally unique, unchanging identifier for this record. Assigned and managed by Gadget."
+  id: GadgetID!
+  "The time at which this record was first created. Set once upon record creation and never changed. Managed by Gadget."
+  createdAt: DateTime!
+  "The time at which this record was last changed. Set each time the record is successfully acted upon by an action. Managed by Gadget."
+  updatedAt: DateTime!
+  googleImageUrl: String
+  firstName: String
+  emailVerificationTokenExpiration: DateTime
+  emailVerified: Boolean
+  profilePicture: StoredFile
+  googleProfileId: String
+  emailVerificationToken: String
+  lastName: String
+  roles: [Role!]
+  resetPasswordTokenExpiration: DateTime
+  lastSignedIn: DateTime
+  resetPasswordToken: String
+  email: String!
+  "Get all the fields for this record. Useful for not having to list out all the fields you want to retrieve, but slower."
+  _all: JSONObject!
+}
+"One file that has been stored and attached to a record"
+type StoredFile {
+  "The URL to retrieve the attached file. Gets the original, unmodified file."
+  url: String!
+  "The content type of the file."
+  mimeType: String!
+  "The size of this file in bytes."
+  byteSize: Int!
+  "The size of this file in bytes."
+  humanSize: String!
+  "The file name of this file."
+  fileName: String!
+}
+"A named group of permissions granted to a particular actor in the system. Managed in the Gadget editor."
+type Role {
+  "The stable identifier for this role. Null if the role has since been deleted."
+  key: String!
+  "The human readable name for this role. Can be changed."
+  name: String!
+}
+"A connection to a list of Session items."
+type SessionConnection {
+  "A list of edges."
+  edges: [SessionEdge!]!
+  "Information to aid in pagination."
+  pageInfo: PageInfo!
+}
+"An edge in a Session connection."
+type SessionEdge {
+  "The item at the end of the edge"
+  node: Session!
+  "A cursor for use in pagination"
+  cursor: String!
+}
+"Information about pagination in a connection."
+type PageInfo {
+  "When paginating forwards, are there more items?"
+  hasNextPage: Boolean!
+  "When paginating backwards, are there more items?"
+  hasPreviousPage: Boolean!
+  "When paginating backwards, the cursor to continue."
+  startCursor: String
+  "When paginating forwards, the cursor to continue."
+  endCursor: String
+}
+"A connection to a list of User items."
+type UserConnection {
+  "A list of edges."
+  edges: [UserEdge!]!
+  "Information to aid in pagination."
+  pageInfo: PageInfo!
+}
+"An edge in a User connection."
+type UserEdge {
+  "The item at the end of the edge"
+  node: User!
+  "A cursor for use in pagination"
+  cursor: String!
+}
+type Pushup {
+  "The globally unique, unchanging identifier for this record. Assigned and managed by Gadget."
+  id: GadgetID!
+  "The time at which this record was first created. Set once upon record creation and never changed. Managed by Gadget."
+  createdAt: DateTime!
+  "The time at which this record was last changed. Set each time the record is successfully acted upon by an action. Managed by Gadget."
+  updatedAt: DateTime!
+  user: User
+  userId: GadgetID
+  numberOfPushups: Float!
+  "Get all the fields for this record. Useful for not having to list out all the fields you want to retrieve, but slower."
+  _all: JSONObject!
+}
+"A connection to a list of Pushup items."
+type PushupConnection {
+  "A list of edges."
+  edges: [PushupEdge!]!
+  "Information to aid in pagination."
+  pageInfo: PageInfo!
+}
+"An edge in a Pushup connection."
+type PushupEdge {
+  "The item at the end of the edge"
+  node: Pushup!
+  "A cursor for use in pagination"
+  cursor: String!
+}
+type GadgetApplicationMeta {
+  id: GadgetID!
+  name: String!
+  slug: String!
+  environmentID: GadgetID!
+  environmentName: String!
+  environmentSlug: String!
+  editURL: String!
+  canonicalRenderURL: String!
+  developmentRenderURL: String!
+  productionRenderURL: String!
+  currentEnvironmentRenderURL: String!
+  jsPackageIdentifier: String!
+  jsPackageTarballURL: String!
+  jsClientClassName: String!
+  graphQLEndpoint: String!
+  developmentGraphQLEndpoint: String!
+  productionGraphQLEndpoint: String!
+  hasSplitEnvironments: Boolean!
+  hasLegacyEffectCards: Boolean!
+  sessionID: String @deprecated(reason: "The current session is available as the root field `currentSession` on the root Query object, which has the ID as well as other attributes of the session.")
+  "The roles that the entity making this API call has been assigned"
+  assignedRoles: [GadgetRole!]!
+  model(key: String, apiIdentifier: String, namespace: [String!]): GadgetModel
+  models: [GadgetModel!]!
+  "Get the same metadata blob for a model and all the models reachable from it via relationships"
+  modelAndRelatedModels(apiIdentifier: String, namespace: [String!]): [GadgetModel!]!
+  firstModelForExamples: GadgetModel!
+  roles: [GadgetRole!]!
+  hasGlobalActions: Boolean!
+  globalActions: [GadgetGlobalAction!]!
+  globalAction(apiIdentifier: String, namespace: [String!]): GadgetGlobalAction
+  hasComputedViews: Boolean!
+  computedView(apiIdentifier: String!, namespace: [String!]): GadgetComputedView
+  computedViews: [GadgetComputedView!]!
+  hydrations(modelName: String!): HydrationPlan
+  allHydrations: JSON!
+  referencedHydrations: JSON!
+  directUploadToken(
+    "An optional unique value for this upload. Useful for forcing simultaneous requests to not be deduplicated through GraphQL client caching."
+    nonce: String
+  ): DirectUploadToken
+  hasShopifyConnection: Boolean!
+  shopifyConnectionApiVersion: String
+  supportsGadgetVitePlugin: Boolean!
+  languagePreference: String!
+  defaultFileExtension: String!
+}
+"Represents one of the roles an identity in the system can be entitled to"
+type GadgetRole {
+  key: String!
+  name: String!
+  selectable: Boolean!
+  order: Int!
+}
+type GadgetGlobalAction {
+  name: String!
+  apiIdentifier: String!
+  namespace: [String!]
+  requiresInput: Boolean!
+  acceptsInput: Boolean!
+  triggers: [GadgetTrigger!]
+  inputFields: [GadgetObjectField!]!
+  examples: GadgetGlobalActionGraphQLType
+}
+type GadgetGlobalActionGraphQLType {
+  exampleMutation: String! @deprecated(reason: "moved to exampleGraphQLMutation")
+  exampleGraphQLMutation: String!
+  inputGraphQLTypeSDL: String
+  outputGraphQLTypeSDL: String!
+  inputTypeScriptInterface: String
+  outputTypeScriptInterface: String!
+  exampleGraphQLVariables: JSON!
+  exampleJSInputs: JSON!
+  exampleImperativeInvocation: String!
+  exampleReactHook: String!
+}
+"One upload target to use for the Direct Upload style of sending files to Gadget"
+type DirectUploadToken {
+  "The URL to upload a file to."
+  url: String!
+  "The token to pass to an action to reference the uploaded file."
+  token: String!
+}
+type InternalQueries {
+  session(id: GadgetID!,
+    "A list of field api identifiers to return. If not specified, all fields except for the computed fields on the record are returned."
+    select: [String!]
+  ): InternalSessionRecord
+  listSession(
+    "Returns the items in the list that come after the specified cursor."
+    after: String,
+    "Returns the first n items from the list."
+    first: Int,
+    "Returns the items in the list that come before the specified cursor."
+    before: String,
+    "Returns the last n items from the list."
+    last: Int,
+    "A list of filters to refine the results by"
+    filter: [SessionFilter!],
+    "A list of field api identifiers to return for each record. If not specified, all fields except for the computed fields on the record are returned."
+    select: [String!]
+  ): InternalSessionRecordConnection!
+  "Currently open platform transaction details, or null if no transaction is open"
+  currentTransactionDetails: JSONObject
+  user(id: GadgetID!,
+    "A list of field api identifiers to return. If not specified, all fields except for the computed fields on the record are returned."
+    select: [String!]
+  ): InternalUserRecord
+  listUser(
+    "Returns the items in the list that come after the specified cursor."
+    after: String,
+    "Returns the first n items from the list."
+    first: Int,
+    "Returns the items in the list that come before the specified cursor."
+    before: String,
+    "Returns the last n items from the list."
+    last: Int,
+    "A list of sort orders to return the results in"
+    sort: [UserSort!],
+    "A list of filters to refine the results by"
+    filter: [UserFilter!],
+    "A free form text search query to find records matching"
+    search: String,
+    "The configuration for which fields to search and the options for how to evaluate each field in the search. If not specified, all searchable fields will be searched."
+    searchFields: UserSearchFields,
+    "A list of field api identifiers to return for each record. If not specified, all fields except for the computed fields on the record are returned."
+    select: [String!]
+  ): InternalUserRecordConnection!
+  pushup(id: GadgetID!,
+    "A list of field api identifiers to return. If not specified, all fields except for the computed fields on the record are returned."
+    select: [String!]
+  ): InternalPushupRecord
+  listPushup(
+    "Returns the items in the list that come after the specified cursor."
+    after: String,
+    "Returns the first n items from the list."
+    first: Int,
+    "Returns the items in the list that come before the specified cursor."
+    before: String,
+    "Returns the last n items from the list."
+    last: Int,
+    "A list of sort orders to return the results in"
+    sort: [PushupSort!],
+    "A list of filters to refine the results by"
+    filter: [PushupFilter!],
+    "A free form text search query to find records matching"
+    search: String,
+    "The configuration for which fields to search and the options for how to evaluate each field in the search. If not specified, all searchable fields will be searched."
+    searchFields: PushupSearchFields,
+    "A list of field api identifiers to return for each record. If not specified, all fields except for the computed fields on the record are returned."
+    select: [String!]
+  ): InternalPushupRecordConnection!
+  gellyView(query: String!, variables: JSONObject): JSON
+}
+"A connection to a list of InternalSessionRecord items."
+type InternalSessionRecordConnection {
+  "A list of edges."
+  edges: [InternalSessionRecordEdge!]!
+  "Information to aid in pagination."
+  pageInfo: PageInfo!
+}
+"An edge in a InternalSessionRecord connection."
+type InternalSessionRecordEdge {
+  "The item at the end of the edge"
+  node: InternalSessionRecord!
+  "A cursor for use in pagination"
+  cursor: String!
+}
+"A connection to a list of InternalUserRecord items."
+type InternalUserRecordConnection {
+  "A list of edges."
+  edges: [InternalUserRecordEdge!]!
+  "Information to aid in pagination."
+  pageInfo: PageInfo!
+}
+"An edge in a InternalUserRecord connection."
+type InternalUserRecordEdge {
+  "The item at the end of the edge"
+  node: InternalUserRecord!
+  "A cursor for use in pagination"
+  cursor: String!
+}
+"A connection to a list of InternalPushupRecord items."
+type InternalPushupRecordConnection {
+  "A list of edges."
+  edges: [InternalPushupRecordEdge!]!
+  "Information to aid in pagination."
+  pageInfo: PageInfo!
+}
+"An edge in a InternalPushupRecord connection."
+type InternalPushupRecordEdge {
+  "The item at the end of the edge"
+  node: InternalPushupRecord!
+  "A cursor for use in pagination"
+  cursor: String!
+}
+type Mutation {
+  signUpUser(email: String, password: String): SignUpUserResult
+  bulkSignUpUsers(
+    "A list of inputs to run the action with. Each input accepts the same input arguments as an invocation of single signUpUser mutation"
+    inputs: [BulkSignUpUsersInput!]!
+  ): BulkSignUpUsersResult
+  signInUser(email: String, password: String): SignInUserResult
+  bulkSignInUsers(
+    "A list of inputs to run the action with. Each input accepts the same input arguments as an invocation of single signInUser mutation"
+    inputs: [BulkSignInUsersInput!]!
+  ): BulkSignInUsersResult
+  signOutUser(id: GadgetID!): SignOutUserResult
+  bulkSignOutUsers(
+    "A list of ids to run the action on"
+    ids: [GadgetID!]!
+  ): BulkSignOutUsersResult
+  updateUser(user: UpdateUserInput, id: GadgetID!): UpdateUserResult
+  bulkUpdateUsers(
+    "A list of inputs to run the action with. Each input accepts the same input arguments as an invocation of single updateUser mutation"
+    inputs: [BulkUpdateUsersInput!]!
+  ): BulkUpdateUsersResult
+  deleteUser(id: GadgetID!): DeleteUserResult
+  bulkDeleteUsers(
+    "A list of ids to run the action on"
+    ids: [GadgetID!]!
+  ): BulkDeleteUsersResult
+  sendVerifyEmailUser(email: String): SendVerifyEmailUserResult
+  bulkSendVerifyEmailUsers(
+    "A list of inputs to run the action with. Each input accepts the same input arguments as an invocation of single sendVerifyEmailUser mutation"
+    inputs: [BulkSendVerifyEmailUsersInput!]!
+  ): BulkSendVerifyEmailUsersResult
+  verifyEmailUser(code: String): VerifyEmailUserResult
+  bulkVerifyEmailUsers(
+    "A list of inputs to run the action with. Each input accepts the same input arguments as an invocation of single verifyEmailUser mutation"
+    inputs: [BulkVerifyEmailUsersInput!]!
+  ): BulkVerifyEmailUsersResult
+  sendResetPasswordUser(email: String): SendResetPasswordUserResult
+  bulkSendResetPasswordUsers(
+    "A list of inputs to run the action with. Each input accepts the same input arguments as an invocation of single sendResetPasswordUser mutation"
+    inputs: [BulkSendResetPasswordUsersInput!]!
+  ): BulkSendResetPasswordUsersResult
+  resetPasswordUser(password: String, code: String): ResetPasswordUserResult
+  bulkResetPasswordUsers(
+    "A list of inputs to run the action with. Each input accepts the same input arguments as an invocation of single resetPasswordUser mutation"
+    inputs: [BulkResetPasswordUsersInput!]!
+  ): BulkResetPasswordUsersResult
+  changePasswordUser(id: GadgetID!, currentPassword: String, newPassword: String): ChangePasswordUserResult
+  bulkChangePasswordUsers(
+    "A list of inputs to run the action with. Each input accepts the same input arguments as an invocation of single changePasswordUser mutation"
+    inputs: [BulkChangePasswordUsersInput!]!
+  ): BulkChangePasswordUsersResult
+  upsertUser(
+    "An array of Strings"
+    on: [String!],user: UpsertUserInput, email: String, password: String  ): UpsertUserResult
+  bulkUpsertUsers(
+    "The list of inputs to upsert. Each input accepts the same arguments as a upsertUser mutation."
+    inputs: [BulkUpsertUsersInput!]!
+  ): BulkUpsertUsersResult!
+  createPushup(pushup: CreatePushupInput): CreatePushupResult
+  bulkCreatePushups(
+    "A list of inputs to run the action with. Each input accepts the same input arguments as an invocation of single createPushup mutation"
+    inputs: [BulkCreatePushupsInput!]!
+  ): BulkCreatePushupsResult
+  updatePushup(pushup: UpdatePushupInput, id: GadgetID!): UpdatePushupResult
+  bulkUpdatePushups(
+    "A list of inputs to run the action with. Each input accepts the same input arguments as an invocation of single updatePushup mutation"
+    inputs: [BulkUpdatePushupsInput!]!
+  ): BulkUpdatePushupsResult
+  deletePushup(id: GadgetID!): DeletePushupResult
+  bulkDeletePushups(
+    "A list of ids to run the action on"
+    ids: [GadgetID!]!
+  ): BulkDeletePushupsResult
+  upsertPushup(
+    "An array of Strings"
+    on: [String!],pushup: UpsertPushupInput  ): UpsertPushupResult
+  bulkUpsertPushups(
+    "The list of inputs to upsert. Each input accepts the same arguments as a upsertPushup mutation."
+    inputs: [BulkUpsertPushupsInput!]!
+  ): BulkUpsertPushupsResult!
+  "Meta information about the application, like it's name, schema, and other internal details."
+  gadgetMeta: GadgetApplicationMeta!
+  background: BackgroundMutations!
+  internal: InternalMutations!
+}
+type SignUpUserResult implements UpsertUserResult {
+  success: Boolean!
+  errors: [ExecutionError!]
+  actionRun: String
+  result: JSON
+}
+"The output when running the signUp on the user model in bulk."
+type BulkSignUpUsersResult {
+  "Boolean describing if all the bulk actions succeeded or not"
+  success: Boolean!
+  "Aggregated list of errors that any bulk action encountered while processing"
+  errors: [ExecutionError!]
+  "The list of returned values for each action executed in the set of bulk actions. Returned in the same order as the input bulk action params."
+  results: [JSON]
+}
+type SignInUserResult {
+  success: Boolean!
+  errors: [ExecutionError!]
+  actionRun: String
+  user: User
+}
+"The output when running the signIn on the user model in bulk."
+type BulkSignInUsersResult {
+  "Boolean describing if all the bulk actions succeeded or not"
+  success: Boolean!
+  "Aggregated list of errors that any bulk action encountered while processing"
+  errors: [ExecutionError!]
+  "The list of all changed user records by each sent bulk action. Returned in the same order as the input bulk action params."
+  users: [User]
+}
+type SignOutUserResult {
+  success: Boolean!
+  errors: [ExecutionError!]
+  actionRun: String
+  user: User
+}
+"The output when running the signOut on the user model in bulk."
+type BulkSignOutUsersResult {
+  "Boolean describing if all the bulk actions succeeded or not"
+  success: Boolean!
+  "Aggregated list of errors that any bulk action encountered while processing"
+  errors: [ExecutionError!]
+  "The list of all changed user records by each sent bulk action. Returned in the same order as the input bulk action params."
+  users: [User]
+}
+type UpdateUserResult implements UpsertUserResult {
+  success: Boolean!
+  errors: [ExecutionError!]
+  actionRun: String
+  user: User
+}
+"The output when running the update on the user model in bulk."
+type BulkUpdateUsersResult {
+  "Boolean describing if all the bulk actions succeeded or not"
+  success: Boolean!
+  "Aggregated list of errors that any bulk action encountered while processing"
+  errors: [ExecutionError!]
+  "The list of all changed user records by each sent bulk action. Returned in the same order as the input bulk action params."
+  users: [User]
+}
+type DeleteUserResult {
+  success: Boolean!
+  errors: [ExecutionError!]
+  actionRun: String
+}
+"The output when running the delete on the user model in bulk."
+type BulkDeleteUsersResult {
+  "Boolean describing if all the bulk actions succeeded or not"
+  success: Boolean!
+  "Aggregated list of errors that any bulk action encountered while processing"
+  errors: [ExecutionError!]
+}
+type SendVerifyEmailUserResult {
+  success: Boolean!
+  errors: [ExecutionError!]
+  actionRun: String
+  result: JSON
+}
+"The output when running the sendVerifyEmail on the user model in bulk."
+type BulkSendVerifyEmailUsersResult {
+  "Boolean describing if all the bulk actions succeeded or not"
+  success: Boolean!
+  "Aggregated list of errors that any bulk action encountered while processing"
+  errors: [ExecutionError!]
+  "The list of returned values for each action executed in the set of bulk actions. Returned in the same order as the input bulk action params."
+  results: [JSON]
+}
+type VerifyEmailUserResult {
+  success: Boolean!
+  errors: [ExecutionError!]
+  actionRun: String
+  result: JSON
+}
+"The output when running the verifyEmail on the user model in bulk."
+type BulkVerifyEmailUsersResult {
+  "Boolean describing if all the bulk actions succeeded or not"
+  success: Boolean!
+  "Aggregated list of errors that any bulk action encountered while processing"
+  errors: [ExecutionError!]
+  "The list of returned values for each action executed in the set of bulk actions. Returned in the same order as the input bulk action params."
+  results: [JSON]
+}
+type SendResetPasswordUserResult {
+  success: Boolean!
+  errors: [ExecutionError!]
+  actionRun: String
+  result: JSON
+}
+"The output when running the sendResetPassword on the user model in bulk."
+type BulkSendResetPasswordUsersResult {
+  "Boolean describing if all the bulk actions succeeded or not"
+  success: Boolean!
+  "Aggregated list of errors that any bulk action encountered while processing"
+  errors: [ExecutionError!]
+  "The list of returned values for each action executed in the set of bulk actions. Returned in the same order as the input bulk action params."
+  results: [JSON]
+}
+type ResetPasswordUserResult {
+  success: Boolean!
+  errors: [ExecutionError!]
+  actionRun: String
+  result: JSON
+}
+"The output when running the resetPassword on the user model in bulk."
+type BulkResetPasswordUsersResult {
+  "Boolean describing if all the bulk actions succeeded or not"
+  success: Boolean!
+  "Aggregated list of errors that any bulk action encountered while processing"
+  errors: [ExecutionError!]
+  "The list of returned values for each action executed in the set of bulk actions. Returned in the same order as the input bulk action params."
+  results: [JSON]
+}
+type ChangePasswordUserResult {
+  success: Boolean!
+  errors: [ExecutionError!]
+  actionRun: String
+  user: User
+}
+"The output when running the changePassword on the user model in bulk."
+type BulkChangePasswordUsersResult {
+  "Boolean describing if all the bulk actions succeeded or not"
+  success: Boolean!
+  "Aggregated list of errors that any bulk action encountered while processing"
+  errors: [ExecutionError!]
+  "The list of all changed user records by each sent bulk action. Returned in the same order as the input bulk action params."
+  users: [User]
+}
+"The result of a bulk upsert operation for the user model"
+type BulkUpsertUsersResult {
+  "Boolean describing if all the bulk actions succeeded or not"
+  success: Boolean!
+  "Aggregated list of errors that any bulk action encountered while processing"
+  errors: [ExecutionError!]
+  "The results of each upsert action in the bulk operation"
+  users: [UpsertUser]
+}
+type UpsertUserReturnType {
+  result: JSON
+}
+type CreatePushupResult implements UpsertPushupResult {
+  success: Boolean!
+  errors: [ExecutionError!]
+  actionRun: String
+  pushup: Pushup
+}
+"The output when running the create on the pushup model in bulk."
+type BulkCreatePushupsResult {
+  "Boolean describing if all the bulk actions succeeded or not"
+  success: Boolean!
+  "Aggregated list of errors that any bulk action encountered while processing"
+  errors: [ExecutionError!]
+  "The list of all changed pushup records by each sent bulk action. Returned in the same order as the input bulk action params."
+  pushups: [Pushup]
+}
+type UpdatePushupResult implements UpsertPushupResult {
+  success: Boolean!
+  errors: [ExecutionError!]
+  actionRun: String
+  pushup: Pushup
+}
+"The output when running the update on the pushup model in bulk."
+type BulkUpdatePushupsResult {
+  "Boolean describing if all the bulk actions succeeded or not"
+  success: Boolean!
+  "Aggregated list of errors that any bulk action encountered while processing"
+  errors: [ExecutionError!]
+  "The list of all changed pushup records by each sent bulk action. Returned in the same order as the input bulk action params."
+  pushups: [Pushup]
+}
+type DeletePushupResult {
+  success: Boolean!
+  errors: [ExecutionError!]
+  actionRun: String
+}
+"The output when running the delete on the pushup model in bulk."
+type BulkDeletePushupsResult {
+  "Boolean describing if all the bulk actions succeeded or not"
+  success: Boolean!
+  "Aggregated list of errors that any bulk action encountered while processing"
+  errors: [ExecutionError!]
+}
+"The result of a bulk upsert operation for the pushup model"
+type BulkUpsertPushupsResult {
+  "Boolean describing if all the bulk actions succeeded or not"
+  success: Boolean!
+  "Aggregated list of errors that any bulk action encountered while processing"
+  errors: [ExecutionError!]
+  "The results of each upsert action in the bulk operation"
+  pushups: [Pushup]
+}
+type BackgroundMutations {
+  signUpUser(email: String, password: String,
+    "The options for executing this action in the background"
+    backgroundOptions: EnqueueBackgroundActionOptions
+  ): EnqueueBackgroundActionResult!
+  bulkSignUpUsers(
+    "A list of inputs to run the action with. Each input accepts the same input arguments as an invocation of single signUpUser mutation"
+    inputs: [BulkSignUpUsersInput!]!,
+    "The options for executing this action in bulk in the background"
+    backgroundOptions: EnqueueBackgroundActionOptions
+  ): BulkEnqueueBackgroundActionResult!
+  signInUser(email: String, password: String,
+    "The options for executing this action in the background"
+    backgroundOptions: EnqueueBackgroundActionOptions
+  ): EnqueueBackgroundActionResult!
+  bulkSignInUsers(
+    "A list of inputs to run the action with. Each input accepts the same input arguments as an invocation of single signInUser mutation"
+    inputs: [BulkSignInUsersInput!]!,
+    "The options for executing this action in bulk in the background"
+    backgroundOptions: EnqueueBackgroundActionOptions
+  ): BulkEnqueueBackgroundActionResult!
+  signOutUser(id: GadgetID!,
+    "The options for executing this action in the background"
+    backgroundOptions: EnqueueBackgroundActionOptions
+  ): EnqueueBackgroundActionResult!
+  bulkSignOutUsers(
+    "A list of ids to run the action on"
+    ids: [GadgetID!]!,
+    "The options for executing this action in bulk in the background"
+    backgroundOptions: EnqueueBackgroundActionOptions
+  ): BulkEnqueueBackgroundActionResult!
+  updateUser(user: UpdateUserInput, id: GadgetID!,
+    "The options for executing this action in the background"
+    backgroundOptions: EnqueueBackgroundActionOptions
+  ): EnqueueBackgroundActionResult!
+  bulkUpdateUsers(
+    "A list of inputs to run the action with. Each input accepts the same input arguments as an invocation of single updateUser mutation"
+    inputs: [BulkUpdateUsersInput!]!,
+    "The options for executing this action in bulk in the background"
+    backgroundOptions: EnqueueBackgroundActionOptions
+  ): BulkEnqueueBackgroundActionResult!
+  deleteUser(id: GadgetID!,
+    "The options for executing this action in the background"
+    backgroundOptions: EnqueueBackgroundActionOptions
+  ): EnqueueBackgroundActionResult!
+  bulkDeleteUsers(
+    "A list of ids to run the action on"
+    ids: [GadgetID!]!,
+    "The options for executing this action in bulk in the background"
+    backgroundOptions: EnqueueBackgroundActionOptions
+  ): BulkEnqueueBackgroundActionResult!
+  sendVerifyEmailUser(email: String,
+    "The options for executing this action in the background"
+    backgroundOptions: EnqueueBackgroundActionOptions
+  ): EnqueueBackgroundActionResult!
+  bulkSendVerifyEmailUsers(
+    "A list of inputs to run the action with. Each input accepts the same input arguments as an invocation of single sendVerifyEmailUser mutation"
+    inputs: [BulkSendVerifyEmailUsersInput!]!,
+    "The options for executing this action in bulk in the background"
+    backgroundOptions: EnqueueBackgroundActionOptions
+  ): BulkEnqueueBackgroundActionResult!
+  verifyEmailUser(code: String,
+    "The options for executing this action in the background"
+    backgroundOptions: EnqueueBackgroundActionOptions
+  ): EnqueueBackgroundActionResult!
+  bulkVerifyEmailUsers(
+    "A list of inputs to run the action with. Each input accepts the same input arguments as an invocation of single verifyEmailUser mutation"
+    inputs: [BulkVerifyEmailUsersInput!]!,
+    "The options for executing this action in bulk in the background"
+    backgroundOptions: EnqueueBackgroundActionOptions
+  ): BulkEnqueueBackgroundActionResult!
+  sendResetPasswordUser(email: String,
+    "The options for executing this action in the background"
+    backgroundOptions: EnqueueBackgroundActionOptions
+  ): EnqueueBackgroundActionResult!
+  bulkSendResetPasswordUsers(
+    "A list of inputs to run the action with. Each input accepts the same input arguments as an invocation of single sendResetPasswordUser mutation"
+    inputs: [BulkSendResetPasswordUsersInput!]!,
+    "The options for executing this action in bulk in the background"
+    backgroundOptions: EnqueueBackgroundActionOptions
+  ): BulkEnqueueBackgroundActionResult!
+  resetPasswordUser(password: String, code: String,
+    "The options for executing this action in the background"
+    backgroundOptions: EnqueueBackgroundActionOptions
+  ): EnqueueBackgroundActionResult!
+  bulkResetPasswordUsers(
+    "A list of inputs to run the action with. Each input accepts the same input arguments as an invocation of single resetPasswordUser mutation"
+    inputs: [BulkResetPasswordUsersInput!]!,
+    "The options for executing this action in bulk in the background"
+    backgroundOptions: EnqueueBackgroundActionOptions
+  ): BulkEnqueueBackgroundActionResult!
+  changePasswordUser(id: GadgetID!, currentPassword: String, newPassword: String,
+    "The options for executing this action in the background"
+    backgroundOptions: EnqueueBackgroundActionOptions
+  ): EnqueueBackgroundActionResult!
+  bulkChangePasswordUsers(
+    "A list of inputs to run the action with. Each input accepts the same input arguments as an invocation of single changePasswordUser mutation"
+    inputs: [BulkChangePasswordUsersInput!]!,
+    "The options for executing this action in bulk in the background"
+    backgroundOptions: EnqueueBackgroundActionOptions
+  ): BulkEnqueueBackgroundActionResult!
+  upsertUser(
+    "An array of Strings"
+    on: [String!],user: UpsertUserInput, email: String, password: String,
+    "The options for executing this action in the background"
+    backgroundOptions: EnqueueBackgroundActionOptions
+  ): EnqueueBackgroundActionResult!
+  bulkUpsertUsers(
+    "The list of inputs to upsert. Each input accepts the same arguments as a upsertUser mutation."
+    inputs: [BulkUpsertUsersInput!]!,
+    "The options for executing this action in bulk in the background"
+    backgroundOptions: EnqueueBackgroundActionOptions
+  ): BulkEnqueueBackgroundActionResult!
+  createPushup(pushup: CreatePushupInput,
+    "The options for executing this action in the background"
+    backgroundOptions: EnqueueBackgroundActionOptions
+  ): EnqueueBackgroundActionResult!
+  bulkCreatePushups(
+    "A list of inputs to run the action with. Each input accepts the same input arguments as an invocation of single createPushup mutation"
+    inputs: [BulkCreatePushupsInput!]!,
+    "The options for executing this action in bulk in the background"
+    backgroundOptions: EnqueueBackgroundActionOptions
+  ): BulkEnqueueBackgroundActionResult!
+  updatePushup(pushup: UpdatePushupInput, id: GadgetID!,
+    "The options for executing this action in the background"
+    backgroundOptions: EnqueueBackgroundActionOptions
+  ): EnqueueBackgroundActionResult!
+  bulkUpdatePushups(
+    "A list of inputs to run the action with. Each input accepts the same input arguments as an invocation of single updatePushup mutation"
+    inputs: [BulkUpdatePushupsInput!]!,
+    "The options for executing this action in bulk in the background"
+    backgroundOptions: EnqueueBackgroundActionOptions
+  ): BulkEnqueueBackgroundActionResult!
+  deletePushup(id: GadgetID!,
+    "The options for executing this action in the background"
+    backgroundOptions: EnqueueBackgroundActionOptions
+  ): EnqueueBackgroundActionResult!
+  bulkDeletePushups(
+    "A list of ids to run the action on"
+    ids: [GadgetID!]!,
+    "The options for executing this action in bulk in the background"
+    backgroundOptions: EnqueueBackgroundActionOptions
+  ): BulkEnqueueBackgroundActionResult!
+  upsertPushup(
+    "An array of Strings"
+    on: [String!],pushup: UpsertPushupInput,
+    "The options for executing this action in the background"
+    backgroundOptions: EnqueueBackgroundActionOptions
+  ): EnqueueBackgroundActionResult!
+  bulkUpsertPushups(
+    "The list of inputs to upsert. Each input accepts the same arguments as a upsertPushup mutation."
+    inputs: [BulkUpsertPushupsInput!]!,
+    "The options for executing this action in bulk in the background"
+    backgroundOptions: EnqueueBackgroundActionOptions
+  ): BulkEnqueueBackgroundActionResult!
+  cancel(id: String!): BackgroundCancelBackgroundActionResult!
+  bulkCancel(ids: [String!]!): BackgroundBulkCancelBackgroundActionResult!
+}
+"The value returned from enqueuing an action to run in the background"
+type EnqueueBackgroundActionResult {
+  success: Boolean!
+  errors: [ExecutionError!]
+  backgroundAction: BackgroundActionHandle
+}
+"One action enqueued for execution in the background"
+type BackgroundActionHandle {
+  "The ID of the background action"
+  id: String!
+}
+"The value returned from bulk enqueuing actions to run in the background"
+type BulkEnqueueBackgroundActionResult {
+  success: Boolean!
+  errors: [ExecutionError!]
+  backgroundActions: [BackgroundActionHandle!]
+}
+"The value returned from cancelling a background action"
+type BackgroundCancelBackgroundActionResult {
+  success: Boolean!
+  errors: [ExecutionError!]
+  backgroundAction: BackgroundActionHandle
+}
+"The value returned from cancelling a background action"
+type BackgroundBulkCancelBackgroundActionResult {
+  successCount: Int!
+  failedCount: Int!
+}
+type InternalMutations {
+  startTransaction: String!
+  commitTransaction: String!
+  rollbackTransaction: String!
+  "Acquire a backend lock, returning only once the lock has been acquired"
+  acquireLock(
+    "Lock name to acquire"
+    lock: String!
+  ): LockOperationResult!
+  createSession(session: InternalSessionInput): InternalCreateSessionResult
+  updateSession(id: GadgetID!, session: InternalSessionInput): InternalUpdateSessionResult
+  deleteSession(id: GadgetID!): InternalDeleteSessionResult
+  deleteManySession(
+    "A list of filters to refine the results by"
+    filter: [SessionFilter!]
+  ): InternalDeleteManySessionResult
+  bulkCreateSessions(sessions: [InternalSessionInput]!): InternalBulkCreateSessionsResult
+  upsertSession(on: [String!], session: InternalSessionInput): InternalUpsertSessionResult
+  createUser(user: InternalUserInput): InternalCreateUserResult
+  updateUser(id: GadgetID!, user: InternalUserInput): InternalUpdateUserResult
+  deleteUser(id: GadgetID!): InternalDeleteUserResult
+  deleteManyUser(
+    "A list of filters to refine the results by"
+    filter: [UserFilter!],
+    "A free form text search query to find records matching"
+    search: String,
+    "The configuration for which fields to search and the options for how to evaluate each field in the search. If not specified, all searchable fields will be searched."
+    searchFields: UserSearchFields
+  ): InternalDeleteManyUserResult
+  bulkCreateUsers(users: [InternalUserInput]!): InternalBulkCreateUsersResult
+  upsertUser(on: [String!], user: InternalUserInput): InternalUpsertUserResult
+  triggerSignUpUser(trigger: JSONObject, verifyTriggerExists: Boolean, params: JSONObject, context: AppGraphQLTriggerMutationContext): SignUpUserResult
+  triggerSignInUser(trigger: JSONObject, verifyTriggerExists: Boolean, params: JSONObject, context: AppGraphQLTriggerMutationContext): SignInUserResult
+  triggerSignOutUser(trigger: JSONObject, verifyTriggerExists: Boolean, params: JSONObject, context: AppGraphQLTriggerMutationContext): SignOutUserResult
+  triggerUpdateUser(trigger: JSONObject, verifyTriggerExists: Boolean, params: JSONObject, context: AppGraphQLTriggerMutationContext): UpdateUserResult
+  triggerDeleteUser(trigger: JSONObject, verifyTriggerExists: Boolean, params: JSONObject, context: AppGraphQLTriggerMutationContext): DeleteUserResult
+  triggerSendVerifyEmailUser(trigger: JSONObject, verifyTriggerExists: Boolean, params: JSONObject, context: AppGraphQLTriggerMutationContext): SendVerifyEmailUserResult
+  triggerVerifyEmailUser(trigger: JSONObject, verifyTriggerExists: Boolean, params: JSONObject, context: AppGraphQLTriggerMutationContext): VerifyEmailUserResult
+  triggerSendResetPasswordUser(trigger: JSONObject, verifyTriggerExists: Boolean, params: JSONObject, context: AppGraphQLTriggerMutationContext): SendResetPasswordUserResult
+  triggerResetPasswordUser(trigger: JSONObject, verifyTriggerExists: Boolean, params: JSONObject, context: AppGraphQLTriggerMutationContext): ResetPasswordUserResult
+  triggerChangePasswordUser(trigger: JSONObject, verifyTriggerExists: Boolean, params: JSONObject, context: AppGraphQLTriggerMutationContext): ChangePasswordUserResult
+  createPushup(pushup: InternalPushupInput): InternalCreatePushupResult
+  updatePushup(id: GadgetID!, pushup: InternalPushupInput): InternalUpdatePushupResult
+  deletePushup(id: GadgetID!): InternalDeletePushupResult
+  deleteManyPushup(
+    "A list of filters to refine the results by"
+    filter: [PushupFilter!],
+    "A free form text search query to find records matching"
+    search: String,
+    "The configuration for which fields to search and the options for how to evaluate each field in the search. If not specified, all searchable fields will be searched."
+    searchFields: PushupSearchFields
+  ): InternalDeleteManyPushupResult
+  bulkCreatePushups(pushups: [InternalPushupInput]!): InternalBulkCreatePushupsResult
+  upsertPushup(on: [String!], pushup: InternalPushupInput): InternalUpsertPushupResult
+  triggerCreatePushup(trigger: JSONObject, verifyTriggerExists: Boolean, params: JSONObject, context: AppGraphQLTriggerMutationContext): CreatePushupResult
+  triggerUpdatePushup(trigger: JSONObject, verifyTriggerExists: Boolean, params: JSONObject, context: AppGraphQLTriggerMutationContext): UpdatePushupResult
+  triggerDeletePushup(trigger: JSONObject, verifyTriggerExists: Boolean, params: JSONObject, context: AppGraphQLTriggerMutationContext): DeletePushupResult
+  cancelBackgroundAction(id: String!): CancelBackgroundActionResult! @deprecated(reason: "Use background.cancelBackgroundAction")
+  bulkCancelBackgroundActions(ids: [String!]!): BulkCancelBackgroundActionResult! @deprecated(reason: "Use background.bulkCancelBackgroundAction")
+}
+type LockOperationResult {
+  "Whether the lock operation succeeded"
+  success: Boolean!
+  "Any errors encountered during the locking/unlocking operation"
+  errors: [ExecutionError!]
+}
+type InternalCreateSessionResult {
+  success: Boolean!
+  errors: [ExecutionError!]
+  "Whether the record was created by this upsert operation"
+  created: Boolean!
+  session: InternalSessionRecord
+}
+type InternalUpdateSessionResult {
+  success: Boolean!
+  errors: [ExecutionError!]
+  "Whether the record was created by this upsert operation"
+  created: Boolean!
+  session: InternalSessionRecord
+}
+type InternalDeleteSessionResult {
+  success: Boolean!
+  errors: [ExecutionError!]
+  "Whether the record was created by this upsert operation"
+  created: Boolean!
+  session: InternalSessionRecord
+}
+type InternalDeleteManySessionResult {
+  success: Boolean!
+  errors: [ExecutionError!]
+}
+type InternalBulkCreateSessionsResult {
+  success: Boolean!
+  errors: [ExecutionError!]
+  sessions: [InternalSessionRecord]
+}
+type InternalUpsertSessionResult {
+  success: Boolean!
+  errors: [ExecutionError!]
+  "Whether the record was created by this upsert operation"
+  created: Boolean!
+  session: InternalSessionRecord
+}
+type InternalCreateUserResult {
+  success: Boolean!
+  errors: [ExecutionError!]
+  "Whether the record was created by this upsert operation"
+  created: Boolean!
+  user: InternalUserRecord
+}
+type InternalUpdateUserResult {
+  success: Boolean!
+  errors: [ExecutionError!]
+  "Whether the record was created by this upsert operation"
+  created: Boolean!
+  user: InternalUserRecord
+}
+type InternalDeleteUserResult {
+  success: Boolean!
+  errors: [ExecutionError!]
+  "Whether the record was created by this upsert operation"
+  created: Boolean!
+  user: InternalUserRecord
+}
+type InternalDeleteManyUserResult {
+  success: Boolean!
+  errors: [ExecutionError!]
+}
+type InternalBulkCreateUsersResult {
+  success: Boolean!
+  errors: [ExecutionError!]
+  users: [InternalUserRecord]
+}
+type InternalUpsertUserResult {
+  success: Boolean!
+  errors: [ExecutionError!]
+  "Whether the record was created by this upsert operation"
+  created: Boolean!
+  user: InternalUserRecord
+}
+type InternalCreatePushupResult {
+  success: Boolean!
+  errors: [ExecutionError!]
+  "Whether the record was created by this upsert operation"
+  created: Boolean!
+  pushup: InternalPushupRecord
+}
+type InternalUpdatePushupResult {
+  success: Boolean!
+  errors: [ExecutionError!]
+  "Whether the record was created by this upsert operation"
+  created: Boolean!
+  pushup: InternalPushupRecord
+}
+type InternalDeletePushupResult {
+  success: Boolean!
+  errors: [ExecutionError!]
+  "Whether the record was created by this upsert operation"
+  created: Boolean!
+  pushup: InternalPushupRecord
+}
+type InternalDeleteManyPushupResult {
+  success: Boolean!
+  errors: [ExecutionError!]
+}
+type InternalBulkCreatePushupsResult {
+  success: Boolean!
+  errors: [ExecutionError!]
+  pushups: [InternalPushupRecord]
+}
+type InternalUpsertPushupResult {
+  success: Boolean!
+  errors: [ExecutionError!]
+  "Whether the record was created by this upsert operation"
+  created: Boolean!
+  pushup: InternalPushupRecord
+}
+"The value returned from cancelling a background action"
+type CancelBackgroundActionResult {
+  success: Boolean!
+  errors: [ExecutionError!]
+  backgroundAction: BackgroundActionHandle
+}
+"The value returned from cancelling a background action"
+type BulkCancelBackgroundActionResult {
+  successCount: Int!
+  failedCount: Int!
+}
+type Subscription {
+  "Subscribe to events about the application for the development harness"
+  gadgetMetaHarnessEvents(
+    "An optional cursor to start the subscription from"
+    cursor: String
+  ): GadgetApplicationHarnessEvent!
+  backgroundAction(id: String!): BackgroundAction
+}
+type GadgetApplicationHarnessEvent {
+  id: String!
+  event: JSON!
+}
+type BackgroundAction {
+  "The ID of the background action"
+  id: String!
+  outcome: BackgroundActionOutcome
+  result: BackgroundActionResult
+}
+interface ExecutionError {
+  "The human facing error message for this error."
+  message: String!
+  "The Gadget platform error code for this error."
+  code: String!
+  "The stack for any exception that caused the error. Only available for super users."
+  stack: String
+}
+interface GadgetField {
+  name: String!
+  apiIdentifier: String!
+  fieldType: GadgetFieldType!
+  hasDefault: Boolean!
+  required: Boolean!
+  requiredArgumentForInput: Boolean!
+  configuration: GadgetFieldConfigInterface!
+}
+"The common bits that all field configuration types share"
+interface GadgetFieldConfigInterface {
+  fieldType: GadgetFieldType!
+  validations: [GadgetFieldValidationUnion]!
+}
+"The common bits that all field validation types share"
+interface GadgetFieldValidationInterface {
+  name: String!
+  specID: String!
+}
+interface UpsertUserResult {
+  success: Boolean!
+  errors: [ExecutionError!]
+  actionRun: String
+}
+interface UpsertPushupResult {
+  success: Boolean!
+  errors: [ExecutionError!]
+  actionRun: String
+}
+union GadgetFieldValidationUnion = GadgetRegexFieldValidation | GadgetRangeFieldValidation | GadgetOnlyImageFileFieldValidation | GadgetGenericFieldValidation
+union UpsertUser = UpsertUserReturnType | User
+union BackgroundActionResult = SignUpUserResult | SignInUserResult | SignOutUserResult | UpdateUserResult | DeleteUserResult | SendVerifyEmailUserResult | VerifyEmailUserResult | SendResetPasswordUserResult | ResetPasswordUserResult | ChangePasswordUserResult | CreatePushupResult | UpdatePushupResult | DeletePushupResult
+"The type of a given field of a model or other in-transit object within Gadget's type system"
+enum GadgetFieldType {
+  Any
+  Array
+  BelongsTo
+  Boolean
+  Code
+  Color
+  Computed
+  DateTime
+  Email
+  EncryptedString
+  Enum
+  File
+  HasMany
+  HasManyThrough
+  HasOne
+  ID
+  JSON
+  Money
+  Null
+  Number
+  Object
+  Password
+  RecordState
+  RichText
+  RoleAssignments
+  String
+  URL
+  Vector
+}
+"A sort order for a field. Can be Ascending or Descending."
+enum SortOrder {
+  Ascending
+  Descending
+}
+""
+enum BackgroundActionPriority {
+  DEFAULT
+  HIGH
+  LOW
+  PLATFORM
+}
+""
+enum BackgroundActionOutcome {
+  failed
+  completed
+}
+input SessionFilter {
+  id: IDEqualsFilter
+  user: IDEqualsFilter
+  userId: IDEqualsFilter
+}
+input IDEqualsFilter {
+  equals: GadgetID
+}
+input UserSort {
+  "Sort the results by the id field. Defaults to ascending (smallest value first)."
+  id: SortOrder
+  "Sort the results by the createdAt field. Defaults to ascending (smallest value first)."
+  createdAt: SortOrder
+  "Sort the results by the updatedAt field. Defaults to ascending (smallest value first)."
+  updatedAt: SortOrder
+  "Sort the results by the googleImageUrl field. Defaults to ascending (smallest value first)."
+  googleImageUrl: SortOrder
+  "Sort the results by the firstName field. Defaults to ascending (smallest value first)."
+  firstName: SortOrder
+  "Sort the results by the emailVerificationTokenExpiration field. Defaults to ascending (smallest value first)."
+  emailVerificationTokenExpiration: SortOrder
+  "Sort the results by the emailVerified field. Defaults to ascending (smallest value first)."
+  emailVerified: SortOrder
+  "Sort the results by the googleProfileId field. Defaults to ascending (smallest value first)."
+  googleProfileId: SortOrder
+  "Sort the results by the emailVerificationToken field. Defaults to ascending (smallest value first)."
+  emailVerificationToken: SortOrder
+  "Sort the results by the lastName field. Defaults to ascending (smallest value first)."
+  lastName: SortOrder
+  "Sort the results by the resetPasswordTokenExpiration field. Defaults to ascending (smallest value first)."
+  resetPasswordTokenExpiration: SortOrder
+  "Sort the results by the lastSignedIn field. Defaults to ascending (smallest value first)."
+  lastSignedIn: SortOrder
+  "Sort the results by the resetPasswordToken field. Defaults to ascending (smallest value first)."
+  resetPasswordToken: SortOrder
+  "Sort the results by the email field. Defaults to ascending (smallest value first)."
+  email: SortOrder
+}
+input UserFilter {
+  AND: [UserFilter]
+  OR: [UserFilter]
+  NOT: [UserFilter]
+  id: IDFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+  googleImageUrl: StringFilter
+  firstName: StringFilter
+  emailVerificationTokenExpiration: DateTimeFilter
+  emailVerified: BooleanFilter
+  googleProfileId: StringFilter
+  emailVerificationToken: StringFilter
+  lastName: StringFilter
+  roles: RoleAssignmentFilter
+  resetPasswordTokenExpiration: DateTimeFilter
+  lastSignedIn: DateTimeFilter
+  resetPasswordToken: StringFilter
+  email: StringFilter
+}
+input IDFilter {
+  equals: GadgetID
+  notEquals: GadgetID
+  isSet: Boolean
+  in: [GadgetID]
+  notIn: [GadgetID]
+  lessThan: GadgetID
+  lessThanOrEqual: GadgetID
+  greaterThan: GadgetID
+  greaterThanOrEqual: GadgetID
+}
+input DateTimeFilter {
+  equals: DateTime
+  notEquals: DateTime
+  isSet: Boolean
+  in: [DateTime]
+  notIn: [DateTime]
+  lessThan: DateTime
+  lessThanOrEqual: DateTime
+  greaterThan: DateTime
+  greaterThanOrEqual: DateTime
+  before: DateTime
+  after: DateTime
+}
+input StringFilter {
+  equals: String
+  notEquals: String
+  isSet: Boolean
+  in: [String]
+  notIn: [String]
+  lessThan: String
+  lessThanOrEqual: String
+  greaterThan: String
+  greaterThanOrEqual: String
+  startsWith: String
+}
+input BooleanFilter {
+  isSet: Boolean
+  equals: Boolean
+  notEquals: Boolean
+}
+input RoleAssignmentFilter {
+  isSet: Boolean
+  equals: [String]
+  notEquals: [String]
+  contains: [String]
+}
+input UserSearchFields {
+  "Configuration for how to search the id field. If false or null, the search won't search this field at all."
+  id: SearchableFieldConfig
+  "Configuration for how to search the createdAt field. If false or null, the search won't search this field at all."
+  createdAt: SearchableFieldConfig
+  "Configuration for how to search the updatedAt field. If false or null, the search won't search this field at all."
+  updatedAt: SearchableFieldConfig
+  "Configuration for how to search the googleImageUrl field. If false or null, the search won't search this field at all."
+  googleImageUrl: SearchableFieldConfig
+  "Configuration for how to search the firstName field. If false or null, the search won't search this field at all."
+  firstName: SearchableFieldConfig
+  "Configuration for how to search the emailVerificationTokenExpiration field. If false or null, the search won't search this field at all."
+  emailVerificationTokenExpiration: SearchableFieldConfig
+  "Configuration for how to search the emailVerified field. If false or null, the search won't search this field at all."
+  emailVerified: SearchableFieldConfig
+  "Configuration for how to search the googleProfileId field. If false or null, the search won't search this field at all."
+  googleProfileId: SearchableFieldConfig
+  "Configuration for how to search the emailVerificationToken field. If false or null, the search won't search this field at all."
+  emailVerificationToken: SearchableFieldConfig
+  "Configuration for how to search the lastName field. If false or null, the search won't search this field at all."
+  lastName: SearchableFieldConfig
+  "Configuration for how to search the roles field. If false or null, the search won't search this field at all."
+  roles: SearchableFieldConfig
+  "Configuration for how to search the resetPasswordTokenExpiration field. If false or null, the search won't search this field at all."
+  resetPasswordTokenExpiration: SearchableFieldConfig
+  "Configuration for how to search the lastSignedIn field. If false or null, the search won't search this field at all."
+  lastSignedIn: SearchableFieldConfig
+  "Configuration for how to search the resetPasswordToken field. If false or null, the search won't search this field at all."
+  resetPasswordToken: SearchableFieldConfig
+  "Configuration for how to search the email field. If false or null, the search won't search this field at all."
+  email: SearchableFieldConfig
+}
+"Input object for configuring how to search a searchable field"
+input SearchableFieldConfig {
+  "The weight of the field in the search index"
+  weight: Int
+}
+input PushupSort {
+  "Sort the results by the id field. Defaults to ascending (smallest value first)."
+  id: SortOrder
+  "Sort the results by the createdAt field. Defaults to ascending (smallest value first)."
+  createdAt: SortOrder
+  "Sort the results by the updatedAt field. Defaults to ascending (smallest value first)."
+  updatedAt: SortOrder
+  "Sort the results by the numberOfPushups field. Defaults to ascending (smallest value first)."
+  numberOfPushups: SortOrder
+}
+input PushupFilter {
+  AND: [PushupFilter]
+  OR: [PushupFilter]
+  NOT: [PushupFilter]
+  id: IDFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+  userId: IDFilter
+  user: UserRelationshipFilter
+  numberOfPushups: FloatFilter
+}
+input UserRelationshipFilter {
+  AND: [UserRelationshipFilter]
+  OR: [UserRelationshipFilter]
+  NOT: [UserRelationshipFilter]
+  id: IDFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+  isSet: Boolean
+  googleImageUrl: StringFilter
+  firstName: StringFilter
+  emailVerificationTokenExpiration: DateTimeFilter
+  emailVerified: BooleanFilter
+  googleProfileId: StringFilter
+  emailVerificationToken: StringFilter
+  lastName: StringFilter
+  roles: RoleAssignmentFilter
+  resetPasswordTokenExpiration: DateTimeFilter
+  lastSignedIn: DateTimeFilter
+  resetPasswordToken: StringFilter
+  email: StringFilter
+}
+input FloatFilter {
+  equals: Float
+  notEquals: Float
+  isSet: Boolean
+  in: [Float]
+  notIn: [Float]
+  lessThan: Float
+  lessThanOrEqual: Float
+  greaterThan: Float
+  greaterThanOrEqual: Float
+}
+input PushupSearchFields {
+  "Configuration for how to search the id field. If false or null, the search won't search this field at all."
+  id: SearchableFieldConfig
+  "Configuration for how to search the createdAt field. If false or null, the search won't search this field at all."
+  createdAt: SearchableFieldConfig
+  "Configuration for how to search the updatedAt field. If false or null, the search won't search this field at all."
+  updatedAt: SearchableFieldConfig
+  "Configuration for how to search the user field. If false or null, the search won't search this field at all."
+  user: SearchableFieldConfig
+  "Configuration for how to search the numberOfPushups field. If false or null, the search won't search this field at all."
+  numberOfPushups: SearchableFieldConfig
+}
+input BulkSignUpUsersInput {
+  email: String
+  password: String
+}
+input BulkSignInUsersInput {
+  email: String
+  password: String
+}
+input UpdateUserInput {
+  googleImageUrl: String
+  firstName: String
+  password: String
+  emailVerificationTokenExpiration: DateTime
+  emailVerified: Boolean
+  profilePicture: StoredFileInput
+  googleProfileId: String
+  emailVerificationToken: String
+  lastName: String
+  resetPasswordTokenExpiration: DateTime
+  lastSignedIn: DateTime
+  resetPasswordToken: String
+  email: String
+}
+"Input object supporting setting or updating a File field."
+input StoredFileInput {
+  "Sets the file contents using this string, interpreting the string as base64 encoded bytes. This is useful for creating files quickly and easily if you have the file contents available already, but, it doesn't support files larger than 10MB, and is slower to process for the backend. Using multipart file uploads or direct-to-storage file uploads is preferable."
+  base64: String
+  "Sets the file contents using binary bytes sent along side a GraphQL mutation as a multipart POST request. Gadget expects this multipart POST request to be formatted according to the GraphQL multipart request spec defined at https://github.com/jaydenseric/graphql-multipart-request-spec. Sending files as a multipart POST requests is supported natively by the generated Gadget JS client using File objects as variables in API calls. This method supports files up to 100MB."
+  file: Upload
+  "Sets the file contents by fetching a remote URL and saving a copy to cloud storage. File downloads happen as the request is processed so they can be validated, which means large files can take some time to download from the existing URL. If the file can't be fetched from this URL, the action will fail."
+  copyURL: URL
+  "Sets the file contents using a token from a separate upload request made with the Gadget storage service. Uploading files while a user is completing the rest of a form gives a great user experience and supports much larger files, but requires client side code to complete the upload, and then pass the returned token for this field."
+  directUploadToken: String
+  "Sets this file's mime type, which will then be used when serving the file during read requests as the `Content-Type` HTTP header. If not set, Gadget will infer a content type based on the file's contents."
+  mimeType: String
+  "Sets this file's stored name, which will then be used as the file name when serving the file during read requests. If not set, Gadget will infer a filename if possible."
+  fileName: String
+}
+input BulkUpdateUsersInput {
+  user: UpdateUserInput
+  id: GadgetID!
+}
+input BulkSendVerifyEmailUsersInput {
+  email: String
+}
+input BulkVerifyEmailUsersInput {
+  code: String
+}
+input BulkSendResetPasswordUsersInput {
+  email: String
+}
+input BulkResetPasswordUsersInput {
+  password: String
+  code: String
+}
+input BulkChangePasswordUsersInput {
+  id: GadgetID!
+  currentPassword: String
+  newPassword: String
+}
+input UpsertUserInput {
+  id: GadgetID
+  googleImageUrl: String
+  firstName: String
+  password: String
+  emailVerificationTokenExpiration: DateTime
+  emailVerified: Boolean
+  profilePicture: StoredFileInput
+  googleProfileId: String
+  emailVerificationToken: String
+  lastName: String
+  "A string list of Gadget platform Role keys to assign to this record"
+  roles: [String!]
+  resetPasswordTokenExpiration: DateTime
+  lastSignedIn: DateTime
+  resetPasswordToken: String
+  email: String
+}
+input BulkUpsertUsersInput {
+  "An array of Strings"
+  on: [String!]
+  user: UpsertUserInput
+  email: String
+  password: String
+}
+input CreatePushupInput {
+  user: UserBelongsToInput
+  numberOfPushups: Float
+}
+"Input object supporting setting or updating related model record on a relationship field"
+input UserBelongsToInput {
+  signUp: NestedSignUpUserInput
+  signIn: NestedSignInUserInput
+  signOut: NestedSignOutUserInput
+  update: NestedUpdateUserInput
+  delete: NestedDeleteUserInput
+  sendVerifyEmail: NestedSendVerifyEmailUserInput
+  verifyEmail: NestedVerifyEmailUserInput
+  sendResetPassword: NestedSendResetPasswordUserInput
+  resetPassword: NestedResetPasswordUserInput
+  changePassword: NestedChangePasswordUserInput
+  "Existing ID of another record, which you would like to associate this record with"
+  _link: GadgetID
+}
+input NestedSignUpUserInput {
+  email: String
+  password: String
+}
+input NestedSignInUserInput {
+  email: String
+  password: String
+}
+input NestedSignOutUserInput {
+  id: GadgetID!
+}
+input NestedUpdateUserInput {
+  googleImageUrl: String
+  firstName: String
+  password: String
+  emailVerificationTokenExpiration: DateTime
+  emailVerified: Boolean
+  profilePicture: StoredFileInput
+  googleProfileId: String
+  emailVerificationToken: String
+  lastName: String
+  resetPasswordTokenExpiration: DateTime
+  lastSignedIn: DateTime
+  resetPasswordToken: String
+  email: String
+  id: GadgetID!
+}
+input NestedDeleteUserInput {
+  id: GadgetID!
+}
+input NestedSendVerifyEmailUserInput {
+  email: String
+}
+input NestedVerifyEmailUserInput {
+  code: String
+}
+input NestedSendResetPasswordUserInput {
+  email: String
+}
+input NestedResetPasswordUserInput {
+  password: String
+  code: String
+}
+input NestedChangePasswordUserInput {
+  id: GadgetID!
+  currentPassword: String
+  newPassword: String
+}
+input BulkCreatePushupsInput {
+  pushup: CreatePushupInput
+}
+input UpdatePushupInput {
+  user: UserBelongsToInput
+  numberOfPushups: Float
+}
+input BulkUpdatePushupsInput {
+  pushup: UpdatePushupInput
+  id: GadgetID!
+}
+input UpsertPushupInput {
+  id: GadgetID
+  user: UserBelongsToInput
+  numberOfPushups: Float
+}
+input BulkUpsertPushupsInput {
+  "An array of Strings"
+  on: [String!]
+  pushup: UpsertPushupInput
+}
+input EnqueueBackgroundActionOptions {
+  "A fixed ID to assign to this background action. If not passed, a random ID will be generated and assigned."
+  id: String
+  "The priority for executing this action."
+  priority: BackgroundActionPriority = DEFAULT
+  "Group actions into the same queue and limit the concurrency they can run with."
+  queue: BackgroundActionQueue
+  "Options governing if and how this action will be retried if it fails."
+  retries: BackgroundActionRetryPolicy
+  "Actions won't be started until after this time."
+  startAt: DateTime
+}
+"A descriptor of the queue to enqueue a background action into. Actions enqueued into the same queue will process in roughly the order they are enqueued, limited by the concurrency settings."
+input BackgroundActionQueue {
+  "The identifier for this queue."
+  name: String!
+  "The maximum number of actions that will be run at the same time. Defaults to 1 if not passed (only one job per key at once)."
+  maxConcurrency: Int = 1
+}
+input BackgroundActionRetryPolicy {
+  "The number of repeat attempts to make if the initial attempt fails. Defaults to 10. Note: the total number of attempts will be this number plus one -- this counts the number of retries *after* the first attempt."
+  retryCount: Int = 10
+  "How long to delay the first retry attempt, in milliseconds. Default is 1000."
+  initialInterval: Int = 1000
+  "The maximum amount of time to delay a retry while exponentially backing off in milliseconds. Default is not set, so the retry can backoff indefinitely"
+  maxInterval: Int
+  "The exponential backoff factor to use for calculating the retry delay for successive retries. Set this higher to grow the delay faster with each retry attempt. Default is 2."
+  backoffFactor: Int = 2
+  "If true, the retry interval will be randomized by a small amount to avoid all retries happening at the same time. Default is false."
+  randomizeInterval: Boolean = false
+}
+input InternalSessionInput {
+  state: RecordState
+  stateHistory: RecordState
+  id: GadgetID
+  createdAt: DateTime
+  updatedAt: DateTime
+  user: InternalBelongsToInput
+}
+"Input object to set the link between this field and the model it belongs to"
+input InternalBelongsToInput {
+  "Existing ID of another record, which you would like to associate this record with"
+  _link: GadgetID
+}
+input InternalUserInput {
+  state: RecordState
+  stateHistory: RecordState
+  id: GadgetID
+  createdAt: DateTime
+  updatedAt: DateTime
+  googleImageUrl: String
+  firstName: String
+  password: String
+  emailVerificationTokenExpiration: DateTime
+  emailVerified: Boolean
+  profilePicture: InternalStoredFileInput
+  googleProfileId: String
+  emailVerificationToken: String
+  lastName: String
+  "A string list of Gadget platform Role keys to assign to this record"
+  roles: [String!]
+  resetPasswordTokenExpiration: DateTime
+  lastSignedIn: DateTime
+  resetPasswordToken: String
+  email: String
+}
+"Input object supporting updating a value for a File field within the Internal API. Includes the storage token for the file which is it's unique identifier, as well as some metadata for the file. Note: the Internal API doesn't support uploading files, just storing the results of prior uploads. Actions must be used to upload files."
+input InternalStoredFileInput {
+  "An opaque identifier used by Gadget internally to uniquely identify this stored file"
+  storageToken: String!
+  "Byte size to report in API calls"
+  byteSize: Int!
+  "File mime type to use when serving the file or making resize operations available"
+  mimeType: String!
+  "Sets this file's stored name, which will then be used when serving the file during read requests. If not set, Gadget will infer a filename if possible."
+  fileName: String!
+  "Has no effect. Convenience property to allow sending an internal metadata blob back to the Internal API, but doesn't do anything. URLs generated by Gadget expire and are not stored."
+  url: String
+}
+"Input object for specifying the context of a mutation trigger"
+input AppGraphQLTriggerMutationContext {
+  "The ID of the session that triggered this mutation. Will be the session that's loaded in the mutation context."
+  sessionID: GadgetID
+}
+input InternalPushupInput {
+  state: RecordState
+  stateHistory: RecordState
+  id: GadgetID
+  createdAt: DateTime
+  updatedAt: DateTime
+  user: InternalBelongsToInput
+  numberOfPushups: Float
+  "An optional list of atomically applied commands for race-safe mutations of the record"
+  _atomics: InternalPushupAtomicsInput
+}
+input InternalPushupAtomicsInput {
+  "Numeric atomic commands for operating on numberOfPushups."
+  numberOfPushups: [NumericAtomicFieldUpdateInput!]
+}
+"Input object for updating a numeric field's value in a race-safe way in the internal API"
+input NumericAtomicFieldUpdateInput {
+  "A number to atomically increment the field value by. Can only be used on numeric fields."
+  increment: Float
+  "A number to atomically decrement the field value by. Can only be used on numeric fields."
+  decrement: Float
+}
+"Instruction for establishing a live connection that is updated once the underlying data changes."
+directive @live(
+    "Whether the query should be live or not."
+    if: Boolean = true,
+    """
+    Propose a desired throttle interval ot the server in order to receive updates to at most once per "throttle" milliseconds. The server must not accept this value.
+    """
+    throttle: Int
+  ) on QUERY
+"Instructions for the Gadget logger that is used while resolving this field."
+directive @logger(
+    "The additional bindings to attach to the logger."
+    additionalBindings: JSONObject
+  ) on QUERY | MUTATION | SUBSCRIPTION
+"The packed billing context for this field."
+directive @billingContext(
+    "The packed billing context for this field."
+    packedContext: String
+  ) on QUERY | MUTATION | SUBSCRIPTION
+"Exposes a URL that specifies the behavior of this scalar."
+directive @specifiedBy(
+    "The URL that specifies the behavior of this scalar."
+    url: String!
+  ) on SCALAR

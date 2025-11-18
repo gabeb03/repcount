@@ -1,0 +1,15 @@
+mutation CreatePushup($pushup: CreatePushupInput) {
+  createPushup(pushup: $pushup) {
+    success
+    errors {
+      message
+      code
+    }
+    pushup {
+      id
+      numberOfPushups
+      createdAt
+      updatedAt
+    }
+  }
+}

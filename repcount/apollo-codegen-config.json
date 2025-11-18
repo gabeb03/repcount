@@ -1,0 +1,23 @@
+{
+   "schemaNamespace": "RepcountAPI",
+   "input": {
+     "operationSearchPaths": [
+       "GraphQL/**/*.graphql"
+     ],
+     "schemaSearchPaths": [
+       "./graphql/schema.graphqls"
+     ]
+   },
+   "output": {
+     "testMocks": { "none": {} },
+     "schemaTypes": {
+       "path": "./RepcountAPI",
+       "moduleType": {
+         "embeddedInTarget": {
+           "name": "Repcount"
+         }
+       }
+     },
+     "operations": { "inSchemaModule": {} }
+   }
+ }

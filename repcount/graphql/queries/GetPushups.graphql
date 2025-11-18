@@ -1,0 +1,16 @@
+query GetUserPushups($userId: GadgetID!) {
+  pushups(filter: { user: { id: { equals: $userId } } }) {
+    edges {
+      node {
+        id
+        numberOfPushups
+        createdAt
+        updatedAt
+        user {
+          id
+          email
+        }
+      }
+    }
+  }
+}

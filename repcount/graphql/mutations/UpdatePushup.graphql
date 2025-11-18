@@ -1,0 +1,15 @@
+mutation UpdatePushup($id: GadgetID!, $pushup: UpdatePushupInput) {
+  updatePushup(id: $id, pushup: $pushup) {
+    success
+    errors {
+      message
+      code
+    }
+    pushup {
+      id
+      numberOfPushups
+      createdAt
+      updatedAt
+    }
+  }
+}
