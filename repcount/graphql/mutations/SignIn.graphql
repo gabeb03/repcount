@@ -6,7 +6,8 @@ mutation SignIn($email: String!, $password: String!) {
       code
     }
     user {
-      _all
+      id
+      email
     }
   }
 }

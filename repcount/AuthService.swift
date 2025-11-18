@@ -43,13 +43,10 @@ final class AuthService {
         guard let result = data.signInUser, result.success, let user = result.user else {
             throw AuthServiceError.invalidCredentials
         }
-        guard let payload = parse(jsonString: user._all),
-              let userId = payload["id"] as? String,
-              let emailValue = payload["email"] as? String ?? payload["Email"] as? String,
-              let token = extractToken(from: payload) else {
+        guard let token = sessionManager.session?.token, !token.isEmpty else {
             throw AuthServiceError.missingSession
         }
-        let session = AuthSession(token: token, userId: userId, email: emailValue)
+        let session = AuthSession(token: token, userId: user.id, email: user.email)
         sessionManager.update(session: session)
         return session
     }
@@ -75,26 +72,4 @@ final class AuthService {
         sessionManager.update(session: nil)
     }
 
-    private func parse(jsonString: String) -> [String: Any]? {
-        guard let data = jsonString.data(using: .utf8),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            return nil
-        }
-        return json
-    }
-
-    private func extractToken(from dictionary: [String: Any]) -> String? {
-        if let token = dictionary["sessionToken"] as? String {
-            return token
-        }
-        if let token = dictionary["session_token"] as? String {
-            return token
-        }
-        if let session = dictionary["session"] as? [String: Any],
-           let token = session["token"] as? String {
-            return token
-        }
-        return nil
-    }
 }
-

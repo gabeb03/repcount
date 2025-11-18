@@ -7,7 +7,7 @@ import SwiftUI
 import Charts
 
 struct ContentView: View {
-    @State private var session: AuthSession? = AuthService.shared.restoreSession()
+    @State private var session: AuthSession? = nil
 
     var body: some View {
         if let session {

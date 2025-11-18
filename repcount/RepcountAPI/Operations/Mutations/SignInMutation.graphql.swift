@@ -9,7 +9,7 @@ extension RepcountAPI {
     static let operationName: String = "SignIn"
     static let operationDocument: ApolloAPI.OperationDocument = .init(
       definition: .init(
-        #"mutation SignIn($email: String!, $password: String!) { signInUser(email: $email, password: $password) { __typename success errors { __typename message code } user { __typename _all } } }"#
+        #"mutation SignIn($email: String!, $password: String!) { signInUser(email: $email, password: $password) { __typename success errors { __typename message code } user { __typename id email } } }"#
       ))
 
     public var email: String
@@ -100,14 +100,16 @@ extension RepcountAPI {
           static var __parentType: any ApolloAPI.ParentType { RepcountAPI.Objects.User }
           static var __selections: [ApolloAPI.Selection] { [
             .field("__typename", String.self),
-            .field("_all", RepcountAPI.JSONObject.self),
+            .field("id", RepcountAPI.GadgetID.self),
+            .field("email", String.self),
           ] }
           static var __fulfilledFragments: [any ApolloAPI.SelectionSet.Type] { [
             SignInMutation.Data.SignInUser.User.self
           ] }
 
-          /// Get all the fields for this record. Useful for not having to list out all the fields you want to retrieve, but slower.
-          var _all: RepcountAPI.JSONObject { __data["_all"] }
+          /// The globally unique, unchanging identifier for this record. Assigned and managed by Gadget.
+          var id: RepcountAPI.GadgetID { __data["id"] }
+          var email: String { __data["email"] }
         }
       }
     }
