@@ -16,7 +16,7 @@ enum AppConfiguration {
            let url = URL(string: plistValue) {
             return url
         }
-        return URL(string: "https://repcount--development.gadget.app/api/graphql")!
+        return URL(string: "https://repcount.gadget.app/api/graphql")!
     }
 
     static var userID: String {
@@ -51,7 +51,7 @@ final class PushupRepository: PushupRepositoryProtocol {
     }
 
     private func client() -> ApolloClient {
-        APINetwork.shared.client(sessionToken: sessionManager.session?.token)
+        return APINetwork.shared.client(sessionToken: sessionManager.session?.token)
     }
 
     func fetchEntries(for userId: String) async throws -> [PushupEntry] {

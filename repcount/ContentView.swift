@@ -379,11 +379,9 @@ struct ActivitiesView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    activitiesHeader
+                VStack(alignment: .leading, spacing: 20) {  
                     segmentedControl
                     summaryCards
-                    ActivitiesChart(histories: histories)
                     historyList
                 }
                 .padding(24)
@@ -404,15 +402,6 @@ struct ActivitiesView: View {
                     }
                 }
             }
-        }
-    }
-
-    private var activitiesHeader: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("Activities")
-                .font(.largeTitle.bold())
-            Text("Keep your streak glowing.")
-                .foregroundStyle(.secondary)
         }
     }
 
@@ -487,40 +476,6 @@ struct ActivitiesView: View {
                 }
                 .buttonStyle(.plain)
             }
-        }
-    }
-}
-
-struct ActivitiesChart: View {
-    let histories: [PushupHistoryDay]
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Progress")
-                .font(.headline)
-            Chart {
-                ForEach(histories.sorted { $0.date < $1.date }) { day in
-                    BarMark(
-                        x: .value("Date", day.date, unit: .day),
-                        y: .value("Push-ups", day.total)
-                    )
-                    .cornerRadius(8)
-                    .foregroundStyle(Color.orange.gradient)
-                }
-            }
-            .chartXAxis {
-                AxisMarks(values: .automatic(desiredCount: 7)) { value in
-                    AxisGridLine()
-                    AxisValueLabel(centered: true, anchor: .center) {
-                        if let date = value.as(Date.self) {
-                            Text(date.formatted(.dateTime.weekday(.narrow)))
-                        }
-                    }
-                }
-            }
-            .frame(height: 200)
-            .background(RoundedRectangle(cornerRadius: 24).fill(Color(UIColor.secondarySystemBackground)))
-            .shadow(color: Color.black.opacity(0.04), radius: 12, y: 6)
         }
     }
 }
