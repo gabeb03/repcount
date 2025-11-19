@@ -23,7 +23,7 @@ struct AuthorizationInterceptor: HTTPInterceptor, Sendable {
         var modified = request
 
         if let token = sessionManager.session?.token, !token.isEmpty {
-            modified.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            modified.setValue(token, forHTTPHeaderField: "Authorization")
         }
 
         return try await next(modified)
@@ -48,9 +48,9 @@ struct SessionCaptureInterceptor: HTTPInterceptor, Sendable {
     ) async throws -> HTTPResponse {
         let response = try await next(request)
 
-    
-        let value = extractToken(from: response.response)
-        sessionManager.updateToken(value ?? "")
+        if let value = extractToken(from: response.response), !value.isEmpty {
+            sessionManager.updateToken(value)
+        }
 
         return response
     }
